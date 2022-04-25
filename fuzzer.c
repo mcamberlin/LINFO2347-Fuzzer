@@ -1,10 +1,6 @@
-#include <stdio.h> // pour fprintf()
-#include <errno.h> // pour le detail des erreurs
-#include <stdio.h>
-#include <string.h>
-
+#include <stdio.h> // for printf, fprintf
+#include <string.h> // for strncpy, memset
 #include "tar.h"
-
 
 /**
  * Launches another axecutable given as argument,
@@ -74,49 +70,21 @@ unsigned int calculate_checksum(struct tar_t* entry){
     return check;
 }
 
-/**
- * fuzz the name field of a header with: - all non ascii character for name[0]
- *                                       - a non ascii character for all index of name[index]
- *                                       - all number and all upper and lower letters of name[0]
- * @param count_crash: pointer that counts the number of crash cases
- * @param count_other_msg : pointer that counts the non crashes message
- * @param argument : the path to the executable
- */
-void fuzz_name(int *count_crash, int *count_other_msg, char* argument)
-{
-    int flag=0;
-    struct tar_t* header;
-    if( ( header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
-    {
-        error("Unable to calloc header in fuzz_name \n");
-    }
 
-    unsigned int first;
-    for(first= 0x80; first!=0xFF && flag!=1; first++)
-    {
-        header->name[0] = first;
-        strcpy(header->magic, "ustar");
-        strcpy(header->version, "00");
-        header->typeflag = 'g';
-        char content[6]="AAAAA";
-        char size_of_content = (char) sizeof(content);
-        strcpy(header->size, "05");
-        int check = calculate_checksum(header);
-        int ret = tar_write(header, content); 
-        flag = check_extractor(count_crash, count_other_msg, argument, header->name);
-    }
-
-    free(header);    
-}
 
 // =============================================
-int main(int argc, char* argv[])
+int main()
 {
 
     struct tar_t* header;
 
+    // =============== FUZZ name of the file ==================
 
-    tar_write(header, "test.txt");
+
+
+    tar_write("archive.tar", header, "test.txt");
+    // int tar_write(const char* tar_name, const struct tar_t* header, const char* file)
+
     
 
     // Generate input files

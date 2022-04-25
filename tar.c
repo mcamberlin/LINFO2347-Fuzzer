@@ -1,64 +1,64 @@
 #include "tar.h"
+#include <stdio.h>  // for printf
+#include <stdlib.h> // for malloc, calloc, free
 
-#include <stdio.h>
-
-int error(descr)
-{
-    fprintf(stderr, "Error: " descr "\n"); 
-    return -1;
-}
+#define ERROR(descr, ...) fprintf(stderr, "Error: " descr "\n", ##__VA_ARGS__); return -1;
 
 // =============================================
 
 /**
- * Create a tar file with a header and a content
+ * Create a tar file with one file entry (header + file)
+ * @param tar_name: The name of the tar archive to create
  * @param header: The tar header to write
- * @param file: the content of the file to put on a tar
+ * @param file: the file to put into the created tar
  */
-int tar_write(struct tar_t* header, char* content)
+int tar_write(const char* tar_name, const struct tar_t* header, const char* file)
 {
-    FILE* file = NULL;
+    FILE* archive = NULL;
 
-    if ( (file = fopen("archive.tar", "w+") ) == NULL)
+    // file creation
+    if ( (archive = fopen( tar_name, "w+") ) == NULL)
     {
-        error("Unable to open the tar file");
-    }
-
-    // header
-    if( fwrite(header, sizeof(struct tar_t), 1, file) != 512 )
-    {
-        error("Unable to write header \n");
-    } 
-
-    // content
-    if( fwrite(content, strlen(file),1, file) != strlen(file) )
-    {
-        error("Unable to write file \n");
-    } 
-
-    // padding
-    int padding = 512 - (strlen(file) % 512);
-    char c = "0"
-    if( fwrite((const void*) &c, sizeof(char), padding, file) != padding )
-    {
-        error("Unable to write padding \n");
+        ERROR("Unable to creation the tar file");
     }
     
-    // end-of-archive marker (two 512-byte blocks filled with zeros)
+    // file entry creation
+    // write header
+    if( fwrite(header, sizeof(header), 1, archive) != 512 )
+    {
+        ERROR("Unable to write header");
+    } 
+    // file entry creation
+    // write file into archive
+    if( fwrite(file, sizeof(file),1, archive) != sizeof(file) )
+    {
+        ERROR("Unable to write file");
+    } 
+
+    // add padding bytes
+    size_t padding = 512 - (sizeof(file) % 512);
+    char* c = "0";
+
+    if( fwrite(c, 1, padding, archive) != padding )
+    {
+        ERROR("Unable to write padding");
+    }
+    
+    // add end-of-archive marker = two 512-byte blocks of zero bytes
     char* end_of_archive = (char *) calloc(1024, sizeof(char));
     if( end_of_archive == NULL)
     {
-        error("Unable to calloc archive");
+        ERROR("Unable to calloc end_of_archive");
     }
 
-    if( fwrite(end_of_archive, 1024 * sizeof(char), 1, file) != 1024 )
+    if( fwrite(end_of_archive, sizeof(end_of_archive), 1, (void*) file) != 1024 )
     {
-        error("Unable to write end-of-archive \n");
+        ERROR("Unable to write end-of-archive");
     }
 
-    if( fclose(file) != 0) 
+    if( fclose(archive) != 0) 
     {
-        error("Unable to close file \n");
+        ERROR("Unable to close");
     }
 
     return 0;

@@ -23,6 +23,6 @@ struct tar_t
 };
 
 
-int tar_write(struct tar_t* header, char* file);
+int tar_write(const char* tar_name, const struct tar_t* header, const char* file);
 
 #endif
