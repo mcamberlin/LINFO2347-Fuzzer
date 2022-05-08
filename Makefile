@@ -9,8 +9,8 @@ CFLAGS += -Wextra 		# Enable additional warnings
 all: fuzzer
 
 fuzzer : 
-	gcc -o fuzzer tar.c fuzzer.c -lz $(CFLAGS)
-	./fuzzer
-
+	gcc -o fuzzer help.c tar.c fuzzer.c -lz $(CFLAGS)
+run:
+	./fuzzer 
 clean:
 	@rm -f fuzzer

@@ -1,74 +1,70 @@
 #include <stdio.h>
 #include <string.h>
 
-struct tar_t
-{                              /* byte offset */
-    char name[100];               /*   0 */
-    char mode[8];                 /* 100 */
-    char uid[8];                  /* 108 */
-    char gid[8];                  /* 116 */
-    char size[12];                /* 124 */
-    char mtime[12];               /* 136 */
-    char chksum[8];               /* 148 */
-    char typeflag;                /* 156 */
-    char linkname[100];           /* 157 */
-    char magic[6];                /* 257 */
-    char version[2];              /* 263 */
-    char uname[32];               /* 265 */
-    char gname[32];               /* 297 */
-    char devmajor[8];             /* 329 */
-    char devminor[8];             /* 337 */
-    char prefix[155];             /* 345 */
-    char padding[12];             /* 500 */
-};
+#include "tar.h"
 
-/** BONUS (for fun, no additional points) without modifying this code,
- * compile it and use the executable to restart our computer.
- */
-
-/**
- * Launches another axecutable given as argument,
+#define ERROR(descr, ...) fprintf(stderr, "Error: " descr "\n", ##__VA_ARGS__);
+/** 
+ * Launches another executable given as argument,
  * parses its output and check whether or not it matches "*** The program has crashed ***".
- * @param the path to the executable
+ * @param the path to the extractor
  * @return -1 if the executable cannot be launched,
  *          0 if it is launched but does not print "*** The program has crashed ***",
  *          1 if it is launched and prints "*** The program has crashed ***".
- *
- * BONUS (for fun, no additional marks) without modifying this code,
- * compile it and use the executable to restart our computer.
  */
-int main(int argc, char* argv[])
+int launches(char* executable)
 {
-    if (argc < 2)
-        return -1;
+    // cmd:
+    // ./extractor archive.tar
+    printf("Here 2 \n");
+
     int rv = 0;
     char cmd[51];
-    strncpy(cmd, argv[1], 25);
-    cmd[26] = '\0';
-    strncat(cmd, " archive.tar", 25);
-    char buf[33];
-    FILE *fp;
+    strncpy(cmd, executable, 25); // copy executable into cmd up to 25 Bytes
+    cmd[26] = '\0'; // add the null Byte
 
-    if ((fp = popen(cmd, "r")) == NULL) {
-        printf("Error opening pipe!\n");
+    strncat(cmd, " archive.tar", 25); // append archive.tar to cmd
+
+    char buf[33]; // output buffer: size 33 because 33 chars in "*** The program has crashed ***\n"
+    
+    FILE *fp;
+    if ((fp = popen(cmd, "r")) == NULL) 
+    {
+        ERROR("Error opening pipe!");
         return -1;
     }
+    printf("Here 3 \n");
 
-    if(fgets(buf, 33, fp) == NULL) {
-        printf("No output\n");
+    if(fgets(buf, 33, fp) == NULL) 
+    //TODO: ERREUR ICI ?? je comprends pas bien
+    // je tape ceci dans le terminal: make puis ./fuzzer ./extractor archive.tar
+    // mais ca donne ceci ...
+    {
+        ERROR("No output");
         goto finally;
     }
-    if(strncmp(buf, "*** The program has crashed ***\n", 33)) {
-        printf("Not the crash message\n");
-        goto finally;
-    } else {
+
+    printf("Here 4 \n");
+
+    // Program has crashed
+    if(strncmp(buf, "*** The program has crashed ***\n", 33) == 0) 
+    {
         printf("Crash message\n");
         rv = 1;
         goto finally;
+        
+    } 
+    // Program has NOT crashed
+    else 
+    {
+        printf("Not the crash message\n");
+        goto finally;
     }
+    
     finally:
-    if(pclose(fp) == -1) {
-        printf("Command not found\n");
+    if(pclose(fp) == -1) 
+    {
+        ERROR("Command not found\n");
         rv = -1;
     }
     return rv;
@@ -79,7 +75,8 @@ int main(int argc, char* argv[])
  * @param entry: The tar header
  * @return the value of the checksum
  */
-unsigned int calculate_checksum(struct tar_t* entry){
+unsigned int calculate_checksum(struct tar_t* entry)
+{
     // use spaces for the checksum bytes while calculating the checksum
     memset(entry->chksum, ' ', 8);
 

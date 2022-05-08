@@ -1,93 +1,106 @@
 #include <stdio.h> // for printf, fprintf
+#include <stdlib.h> // for malloc, calloc, free
 #include <string.h> // for strncpy, memset
 #include "tar.h"
+#include "help.h"
+
+#define ERROR(descr, ...) fprintf(stderr, "Error: " descr "\n", ##__VA_ARGS__);
 
 /**
- * Launches another axecutable given as argument,
- * parses its output and check whether or not it matches "*** The program has crashed ***".
- * @param the path to the executable
- * @return -1 if the executable cannot be launched,
- *          0 if it is launched but does not print "*** The program has crashed ***",
- *          1 if it is launched and prints "*** The program has crashed ***".
+        strcpy(header->name     , "");
+        strcpy(header->mode     , "");
+        strcpy(header->uid      , "");
+        strcpy(header->gid      , "");
+        strcpy(header->size     , "");
+        strcpy(header->mtime    , "");
+        strcpy(header->chksum   , "");
+        strcpy(&header->typeflag , "");
+        strcpy(header->linkname , "");
+        strcpy(header->magic    , "");
+        strcpy(header->version  , "");
+        strcpy(header->uname    , "");
+        strcpy(header->gname    , ""); 
+        strcpy(header->devmajor , "");// no fuzzing required
+        strcpy(header->devminor , "");// no fuzzing required
+        strcpy(header->prefix   , "");// no fuzzing required
+        strcpy(header->padding  , "");// no fuzzing required
+*/
+
+/**
+ * @brief 
+ * @param path to the executable of the tar extractor 
+ * @return -1 if an error occured
+ *          int: the number of programs that crashed 
  */
-int launcher(int argc, char* argv[])
+int fuzz_name(char* executable)
 {
-    if (argc < 2)
-        return -1;
-    int rv = 0;
-    char cmd[51];
-    strncpy(cmd, argv[1], 25);
-    cmd[26] = '\0';
-    strncat(cmd, " archive.tar", 25);
-    char buf[33];
-    FILE *fp;
+    printf("===== fuzz name \n");
+    
+    int crashed = 0;
 
-    if ((fp = popen(cmd, "r")) == NULL) {
-        printf("Error opening pipe!\n");
+    // archive creation
+    struct tar_t* header;
+    if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
+    {
+        ERROR("Unable to malloc header");
         return -1;
     }
 
-    if(fgets(buf, 33, fp) == NULL) {
-        printf("No output\n");
-        goto finally;
+    // 1. Test special character from extended ASCII table in the name: https://ascii-tables.com/
+    for(int i =128; i < 256; i++)
+    {
+        char c = (char) i;
+        strncpy(header->name      , &c, 1);
+        strcpy(&header->typeflag , "g");     // g = Global extended header
+        strcpy(header->magic     , "ustar"); // TMAGIC = ustar
+
+        char* file = "Hello World !";
+        char size = (char) sizeof(file);
+        strcpy(header->size, &size);
+
+        calculate_checksum(header);
+        if( tar_write("archive.tar", header, "test.txt") == -1) 
+        {
+            ERROR("Unable to write the tar file");
+            return -1;
+        }
+
+        printf("Here 1 \n");
+        int rv;
+        if( (rv = launches(executable)) == -1 ) 
+        {
+            ERROR("Error in launches");
+            return -1;
+        }
+        else
+        {
+            crashed += rv;
+        }
+        break; //TODO:  remove : only for debugging
     }
-    if(strncmp(buf, "*** The program has crashed ***\n", 33)) {
-        printf("Not the crash message\n");
-        goto finally;
-    } else {
-        printf("Crash message\n");
-        rv = 1;
-        goto finally;
-    }
-    finally:
-    if(pclose(fp) == -1) {
-        printf("Command not found\n");
-        rv = -1;
-    }
-    return rv;
+    free(header);
+    
+    return crashed;
 }
-
-/**
- * Computes the checksum for a tar header and encode it on the header
- * @param entry: The tar header
- * @return the value of the checksum
- */
-unsigned int calculate_checksum(struct tar_t* entry){
-    // use spaces for the checksum bytes while calculating the checksum
-    memset(entry->chksum, ' ', 8);
-
-    // sum of entire metadata
-    unsigned int check = 0;
-    unsigned char* raw = (unsigned char*) entry;
-    for(int i = 0; i < 512; i++){
-        check += raw[i];
-    }
-
-    snprintf(entry->chksum, sizeof(entry->chksum), "%06o0", check);
-
-    entry->chksum[6] = '\0';
-    entry->chksum[7] = ' ';
-    return check;
-}
-
-
 
 // =============================================
-int main()
+int main(int argc, char* argv[])
 {
-
-    struct tar_t* header;
-
-    // =============== FUZZ name of the file ==================
-
-
-
-    tar_write("archive.tar", header, "test.txt");
-    // int tar_write(const char* tar_name, const struct tar_t* header, const char* file)
-
+    if (argc < 2)
+    {
+        ERROR("Not enough args");
+        return -1;
+    }
     
+    int crashed = 0; // count the number of program that crashed
+    
+    // =============== FUZZ name of the file ==================
+    int rslt = fuzz_name(argv[1]);
+    if(rslt != -1)
+    {
+        crashed += rslt;
+    }
 
-    // Generate input files
-
-    // Check wether the converter crashes
+    printf("%d programs crashed \n", crashed);
+    return 0;
 }
