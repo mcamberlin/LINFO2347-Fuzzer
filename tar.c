@@ -1,5 +1,6 @@
 #include <stdio.h>  // for printf
 #include <stdlib.h> // for malloc, calloc, free
+#include <string.h> // for strlen
 
 #include "tar.h"
 
@@ -11,11 +12,11 @@
  * Create a tar file with name @tar_name with one file entry (header + file)
  * @param tar_name: The name of the tar archive to create
  * @param header: The tar header to write
- * @param file: The file to put into the created tar
+ * @param content: The content to put into the created tar
  * @return -1 if the process failed
  *          0 if case of success
  */
-int tar_write(const char* tar_name, const struct tar_t* header, const char* file)
+int tar_write(const char* tar_name, const struct tar_t* header, const char* content)
 {
 
     // file creation
@@ -38,22 +39,23 @@ int tar_write(const char* tar_name, const struct tar_t* header, const char* file
 
     // file entry creation
     // write file into archive
-    if( (rslt = fwrite(file, sizeof(file),1, archive)) != 1 )
+    if( (rslt = fwrite(content, strlen(content),1, archive)) != 1 )
+    // TODO: change sizeof(file)
     {
         ERROR("Unable to write file");
         return -1;
     } 
 
     // add padding bytes
-    size_t padding = 512 - (sizeof(file) % 512);
+    size_t padding = 512 - (strlen(content) % 512);
     char c = '0';
-
     if( (rslt = fwrite( &c, 1, padding, archive)) != (int) padding )
     {
         ERROR("Unable to write padding");
         return -1;
     }
-    
+
+
     // add end-of-archive marker = two 512-byte blocks of zero bytes
     char* end_of_archive;
     if( (end_of_archive = (char *) calloc(1024, sizeof(char))) == NULL )

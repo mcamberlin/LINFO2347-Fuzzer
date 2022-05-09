@@ -14,10 +14,6 @@
  */
 int launches(char* executable)
 {
-    // cmd:
-    // ./extractor archive.tar
-    printf("Here 2 \n");
-
     int rv = 0;
     char cmd[51];
     strncpy(cmd, executable, 25); // copy executable into cmd up to 25 Bytes
@@ -33,18 +29,16 @@ int launches(char* executable)
         ERROR("Error opening pipe!");
         return -1;
     }
-    printf("Here 3 \n");
-
+   
+    /*
     if(fgets(buf, 33, fp) == NULL) 
-    //TODO: ERREUR ICI ?? je comprends pas bien
-    // je tape ceci dans le terminal: make puis ./fuzzer ./extractor archive.tar
-    // mais ca donne ceci ...
     {
         ERROR("No output");
         goto finally;
     }
-
-    printf("Here 4 \n");
+    */
+   fgets(buf, 33, fp);
+    
 
     // Program has crashed
     if(strncmp(buf, "*** The program has crashed ***\n", 33) == 0) 

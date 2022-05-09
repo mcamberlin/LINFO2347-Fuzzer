@@ -1,6 +1,11 @@
 #include <stdio.h> // for printf, fprintf
 #include <stdlib.h> // for malloc, calloc, free
-#include <string.h> // for strncpy, memset
+#include <string.h> // for strncpy, memset, strlen
+#include <sys/stat.h> // for size of file
+#include <sys/types.h> // for size of file
+
+
+
 #include "tar.h"
 #include "help.h"
 
@@ -50,33 +55,40 @@ int fuzz_name(char* executable)
     for(int i =128; i < 256; i++)
     {
         char c = (char) i;
-        strncpy(header->name      , &c, 1);
+        printf("name: %c \n", c);
+
+        // Fill in the header
+        strcpy(header->name     , &c);
+        char* content = "Hello World !";
+        strcpy(header->size      , "013");
         strcpy(&header->typeflag , "g");     // g = Global extended header
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
-
-        char* file = "Hello World !";
-        char size = (char) sizeof(file);
-        strcpy(header->size, &size);
-
+        strcpy(header->version   , "00");
         calculate_checksum(header);
-        if( tar_write("archive.tar", header, "test.txt") == -1) 
+        
+        // Write header and file into archive
+        if( tar_write("archive.tar", header, content) == -1) 
         {
             ERROR("Unable to write the tar file");
             return -1;
         }
 
-        printf("Here 1 \n");
         int rv;
         if( (rv = launches(executable)) == -1 ) 
         {
             ERROR("Error in launches");
             return -1;
         }
+        else if (rv == 1) 
+        // *** The program has crashed ***
+        {
+            ERROR("FOUND AN ARCHIVE THAT CRASHED");
+            return 1;
+        }
         else
         {
             crashed += rv;
         }
-        break; //TODO:  remove : only for debugging
     }
     free(header);
     
