@@ -37,24 +37,26 @@ int tar_write(const char* tar_name, const struct tar_t* header, const char* cont
         return -1;
     }
 
-    // file entry creation
-    // write file into archive
-    if( (rslt = fwrite(content, strlen(content),1, archive)) != 1 )
-    // TODO: change sizeof(file)
+    if(content != NULL)
     {
-        ERROR("Unable to write file");
-        return -1;
-    } 
+        // file entry creation
+        // write file into archive
+        if( (rslt = fwrite(content, strlen(content),1, archive)) != 1 )
+        // TODO: change sizeof(file)
+        {
+            ERROR("Unable to write file");
+            return -1;
+        } 
 
-    // add padding bytes
-    size_t padding = 512 - (strlen(content) % 512);
-    char c = '0';
-    if( (rslt = fwrite( &c, 1, padding, archive)) != (int) padding )
-    {
-        ERROR("Unable to write padding");
-        return -1;
+        // add padding bytes
+        size_t padding = 512 - (strlen(content) % 512);
+        char c = '0';
+        if( (rslt = fwrite( &c, 1, padding, archive)) != (int) padding )
+        {
+            ERROR("Unable to write padding");
+            return -1;
+        }
     }
-
 
     // add end-of-archive marker = two 512-byte blocks of zero bytes
     char* end_of_archive;

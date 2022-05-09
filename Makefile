@@ -11,6 +11,8 @@ all: fuzzer
 fuzzer : 
 	gcc -o fuzzer help.c tar.c fuzzer.c -lz $(CFLAGS)
 run:
-	./fuzzer 
+	@rm -f fuzzer
+	gcc -o fuzzer help.c tar.c fuzzer.c -lz $(CFLAGS)
+	./fuzzer ./extractor
 clean:
 	@rm -f fuzzer
