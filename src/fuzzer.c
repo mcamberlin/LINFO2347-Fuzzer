@@ -539,7 +539,7 @@ int fuzz_mtime(char* executable)
     // Test every ascii and non ascii character at position 0
     for( int i = 0; i < 255; i++)
     {
-        char c = i + 48;
+        char c = (char) i;
         // Fill in the header
         strcpy(header->name      , "mtime");
         strcpy(header->mode      , "07777");

@@ -15,3 +15,4 @@ run:
 	./fuzzer ./extractor
 clean:
 	@rm -f fuzzer
+	@rm -f archive.tar
