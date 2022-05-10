@@ -1,8 +1,6 @@
 #include <stdio.h> // for printf, fprintf
 #include <stdlib.h> // for malloc, calloc, free
 #include <string.h> // for strncpy, memset, strlen
-#include <sys/stat.h> // for size of file
-#include <sys/types.h> // for size of file
 
 // https://ascii-tables.com/
 
@@ -38,9 +36,9 @@ int fuzz_name(char* executable)
         char c = (char) i;
         // Fill in the header
         header->name[0] = c;
+        strcpy(header->mode, "07777");
         char* content = "Hello World !";
         strcpy(header->size      , "013");
-        strcpy(&header->typeflag , "g");     // g = Global extended header
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -76,9 +74,9 @@ int fuzz_name(char* executable)
 
         // Fill in the header
         header->name[pos] = c;
+        strcpy(header->mode, "07777");
         char* content = "Hello World !";
         strcpy(header->size      , "013");
-        strcpy(&header->typeflag , "g");     // g = Global extended header
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -143,7 +141,6 @@ int fuzz_mode(char* executable)
         header->mode[0] = c;
         char* content = "Hello World !";
         strcpy(header->size      , "013");
-        strcpy(&header->typeflag , "g");     // g = Global extended header
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -182,7 +179,6 @@ int fuzz_mode(char* executable)
         header->mode[pos] = c;
         char* content = "Hello World !";
         strcpy(header->size      , "013");
-        strcpy(&header->typeflag , "g");     // g = Global extended header
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -222,7 +218,7 @@ int fuzz_mode(char* executable)
             header->mode[pos] = c;
             char* content = "Hello World !";
             strcpy(header->size      , "013");
-            strcpy(&header->typeflag , "g");     // g = Global extended header
+            
             strcpy(header->magic     , "ustar"); // TMAGIC = ustar
             strcpy(header->version   , "00");
             calculate_checksum(header);
@@ -278,6 +274,7 @@ int fuzz_uid(char* executable)
         ERROR("Unable to malloc header");
         return -1;
     }
+    
     // Test all characters from ASCII table and extended ASCII table in the name: https://ascii-tables.com/
     for(int i =0; i <255; i++)
     {
@@ -285,10 +282,10 @@ int fuzz_uid(char* executable)
 
         // Fill in the header
         strcpy(header->name     , "uid");
+        strcpy(header->mode     , "07777");
         header->uid[0] = c;
         char* content = "Hello World !";
         strcpy(header->size      , "013");
-        strcpy(&header->typeflag , "g");     // g = Global extended header
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -314,6 +311,7 @@ int fuzz_uid(char* executable)
             return 1;
         }
     }
+    
     free(header);
     return 0;
 }
@@ -364,7 +362,7 @@ int fuzz_size(char* executable)
             strcpy(header->name, "size");
             char* content = "Hello World !";
             header->size[pos] = c;
-            strcpy(&header->typeflag , "g");     // g = Global extended header
+            
             strcpy(header->magic     , "ustar"); // TMAGIC = ustar
             strcpy(header->version   , "00");
             calculate_checksum(header);
@@ -401,7 +399,7 @@ int fuzz_size(char* executable)
         strcpy(header->name      , "size");
         char* content = "Hello World !";
         header->size[0] = c;
-        strcpy(&header->typeflag , "g");     // g = Global extended header
+        
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -439,7 +437,7 @@ int fuzz_size(char* executable)
         strcpy(header->name      , "size");
         char* content = "Hello World !";
         header->size[pos] = c;
-        strcpy(&header->typeflag , "g");     // g = Global extended header
+        
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -507,7 +505,7 @@ int fuzz_mtime(char* executable)
             char* content = "Hello World !";
             strcpy(header->size, "013");
             header->mtime[pos] = c;
-            strcpy(&header->typeflag , "g");     // g = Global extended header
+            
             strcpy(header->magic     , "ustar"); // TMAGIC = ustar
             strcpy(header->version   , "00");
             calculate_checksum(header);
@@ -548,7 +546,7 @@ int fuzz_mtime(char* executable)
         char* content = "Hello World !";
         strcpy(header->size      , "013");
         header->mtime[0] = c;
-        strcpy(&header->typeflag , "g");     // g = Global extended header
+        
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -587,7 +585,7 @@ int fuzz_mtime(char* executable)
         char* content = "Hello World !";
         strcpy(header->size, "013");
         header->mtime[pos] = c;
-        strcpy(&header->typeflag , "g");     // g = Global extended header
+        
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -723,7 +721,7 @@ int fuzz_linkname(char* executable)
         strcpy(header->name      , "linkname");
         char* content = "Hello World !";
         strcpy(header->size, "013");
-        strcpy(&header->typeflag , "g");     // g = Global extended header
+        
         header->linkname[0] = c;
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
@@ -762,7 +760,7 @@ int fuzz_linkname(char* executable)
         strcpy(header->name      , "linkname");
         char* content = "Hello World !";
         strcpy(header->size, "013");
-        strcpy(&header->typeflag , "g");     // g = Global extended header
+        
         header->linkname[pos] = c;
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
@@ -863,7 +861,7 @@ int fuzz_magic(char* executable)
         strcpy(header->name      , "magic");
         char* content = "Hello World !";
         strcpy(header->size, "013");
-        strcpy(&header->typeflag , "g");     // g = Global extended header
+        
         header->magic[0] = c;
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -901,7 +899,7 @@ int fuzz_magic(char* executable)
         strcpy(header->name      , "magic");
         char* content = "Hello World !";
         strcpy(header->size, "013");
-        strcpy(&header->typeflag , "g");     // g = Global extended header
+        
         header->magic[pos] = c;
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -988,7 +986,7 @@ int fuzz_gname(char* executable)
         strcpy(header->name      , "gname");
         char* content = "Hello World !";
         strcpy(header->size, "013");
-        strcpy(&header->typeflag , "g");     // g = Global extended header
+        
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         header->gname[0] = c;
@@ -1027,7 +1025,7 @@ int fuzz_gname(char* executable)
         strcpy(header->name      , "gname");
         char* content = "Hello World !";
         strcpy(header->size      , "013");
-        strcpy(&header->typeflag , "g");     // g = Global extended header
+        
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         header->gname[pos] = c;
@@ -1062,6 +1060,175 @@ int fuzz_gname(char* executable)
 }
 
 
+/**
+ * @brief fuzz end of archive by:
+ * - creating archive without end-of-archive marker (2x 512-byte zero bytes blocks)
+ * @param executable of the tar extractor
+ * @return -1 if an error occured
+ *          0 if no erroneous archive has been found
+ *          1 if a erroneous archive has been found
+ */
+int fuzz_end_of_archive(char* executable)
+{
+    printf("===== fuzz end of archive \n");
+
+    // archive creation 
+    struct tar_t* header;
+    if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
+    {
+        ERROR("Unable to malloc header");
+        return -1;
+    }
+
+    // Fill in the header
+    strcpy(header->name      , "end_of_archive");
+    char* content = "Hello World !";
+    strcpy(header->size      , "013");
+    strcpy(header->magic     , "ustar"); // TMAGIC = ustar
+    strcpy(header->version   , "00");
+    calculate_checksum(header);
+
+    // Write header and file into archive
+    if( tar_write_without_end_of_archive("archive.tar", header, content) == -1)
+    {
+        ERROR("Unable to write the tar file");
+        free(header);
+        return -1;
+    }
+
+    int rv;
+    if( (rv = launches(executable)) == -1 )
+    {
+        ERROR("Error in launches");
+        free(header);
+        return -1;
+    }
+    else if (rv == 1)
+    // *** The program has crashed ***
+    {
+        printf("--- AN ERRONEOUS ARCHIVE FOUND \n");
+        return 1;
+    }
+
+    free(header);
+
+    return 0;
+}
+
+/**
+ * @brief fuzz header no data by:
+ * - creating archive with header filled like a file would be stored in it but in fact archive does not contain data
+ * @param executable of the tar extractor
+ * @return -1 if an error occured
+ *          0 if no erroneous archive has been found
+ *          1 if a erroneous archive has been found
+ */
+int fuzz_header_no_data(char* executable)
+{
+    printf("===== fuzz header no data \n");
+
+    // archive creation 
+    struct tar_t* header;
+    if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
+    {
+        ERROR("Unable to malloc header");
+        return -1;
+    }
+
+    // Fill in the header
+    strcpy(header->name      , "header_no_data");
+    strcpy(header->size      , "00");
+    
+    strcpy(header->magic     , "ustar"); // TMAGIC = ustar
+    strcpy(header->version   , "00");
+    calculate_checksum(header);
+
+    // Write header
+    if( tar_write_with_header_without_data("archive.tar", header, NULL) == -1)
+    {
+        ERROR("Unable to write the tar file");
+        free(header);
+        return -1;
+    }
+
+    int rv;
+    if( (rv = launches(executable)) == -1 )
+    {
+        ERROR("Error in launches");
+        free(header);
+        return -1;
+    }
+    else if (rv == 1)
+    // *** The program has crashed ***
+    {
+        printf("--- AN ERRONEOUS ARCHIVE FOUND \n");
+        return 1;
+    }
+
+    free(header);
+
+    return 0;
+}
+
+
+/**
+ * @brief fuzz by:
+ * - 
+ * @param executable of the tar extractor
+ * @return -1 if an error occured
+ *          0 if no erroneous archive has been found
+ *          1 if a erroneous archive has been found
+ */
+int fuzz_template(char* executable)
+{
+    printf("===== fuzz  \n");
+
+    // archive creation 
+    struct tar_t* header;
+    if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
+    {
+        ERROR("Unable to malloc header");
+        return -1;
+    }
+
+    // Fill in the header
+    strcpy(header->name      , "template");
+    strcpy(header->mode      , "07777");
+    char* content = "Hello World !";
+    strcpy(header->size      , "013");
+    strcpy(header->magic     , "ustar"); // TMAGIC = ustar
+    strcpy(header->version   , "00");
+    calculate_checksum(header);
+
+    // Write header
+    if( tar_write("archive.tar", header, content) == -1)
+    {
+        ERROR("Unable to write the tar file");
+        free(header);
+        return -1;
+    }
+
+    int rv;
+    if( (rv = launches(executable)) == -1 )
+    {
+        ERROR("Error in launches");
+        free(header);
+        return -1;
+    }
+    else if (rv == 1)
+    // *** The program has crashed ***
+    {
+        printf("--- AN ERRONEOUS ARCHIVE FOUND \n");
+        return 1;
+    }
+
+    free(header);
+
+    return 0;
+}
+
+
+
 
 // =============================================
 int main(int argc, char* argv[])
@@ -1069,7 +1236,7 @@ int main(int argc, char* argv[])
     if (argc < 2)
     {
         ERROR("Not enough args");
-        return -1;
+        return EXIT_FAILURE;
     }
 
     int crashed = 0; // count the number of program that crashed
@@ -1086,13 +1253,13 @@ int main(int argc, char* argv[])
     {
         crashed += rslt;
     }
-
+*/
     // =============== FUZZ uid of the file ==================
     if( (rslt = fuzz_uid(argv[1])) != -1)
     {
         crashed += rslt;
     }
-
+/*
     // =============== FUZZ gid of the file ==================
 
 
@@ -1137,8 +1304,25 @@ int main(int argc, char* argv[])
     {
         crashed += rslt;
     }
-*/
 
+    // =============== FUZZ end of archive ==================
+    if( (rslt = fuzz_end_of_archive(argv[1])) != -1)
+    {
+        crashed += rslt;
+    }
+
+    // =============== FUZZ end of archive ==================
+    if( (rslt = fuzz_header_no_data(argv[1])) != -1)
+    {
+        crashed += rslt;
+    }
+
+    // =============== FUZZ template ==================
+    if( (rslt = fuzz_template(argv[1])) != -1)
+    {
+        crashed += rslt;
+    }
+*/
     printf("%d programs crashed \n", crashed);
-    return 0;
+    return EXIT_SUCCESS;
 }

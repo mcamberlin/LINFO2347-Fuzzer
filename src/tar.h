@@ -16,13 +16,17 @@ struct tar_t
     char version[2];              /* 263 */ // Zoé
     char uname[32];               /* 265 */ // Zoé
     char gname[32];               /* 297 */ // Merlin OK
-    char devmajor[8];             /* 329 */ // no fuzzing required
-    char devminor[8];             /* 337 */ // no fuzzing required
-    char prefix[155];             /* 345 */ // no fuzzing required
-    char padding[12];             /* 500 */ // no fuzzing required
+    char devmajor[8];             /* 329 */ // no fuzzing required (hint given) 
+    char devminor[8];             /* 337 */ // no fuzzing required (hint given)
+    char prefix[155];             /* 345 */ // no fuzzing required (hint given)
+    char padding[12];             /* 500 */ // no fuzzing required (hint given)
 };
 
 
 int tar_write(const char* tar_name, const struct tar_t* header, const char* file);
+
+int tar_write_without_end_of_archive(const char* tar_name, const struct tar_t* header, const char* content);
+
+int tar_write_with_header_without_data(const char* tar_name, const struct tar_t* header, const char* content);
 
 #endif
