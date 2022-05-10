@@ -38,7 +38,7 @@ int fuzz_name(char* executable)
         header->name[0] = c;
         strcpy(header->mode, "07777");
         char* content = "Hello World !";
-        strcpy(header->size      , "013");
+        strcpy(header->size      , "015");
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -76,7 +76,7 @@ int fuzz_name(char* executable)
         header->name[pos] = c;
         strcpy(header->mode, "07777");
         char* content = "Hello World !";
-        strcpy(header->size      , "013");
+        strcpy(header->size      , "015");
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -140,7 +140,7 @@ int fuzz_mode(char* executable)
         strcpy(header->name      , "mode");
         header->mode[0] = c;
         char* content = "Hello World !";
-        strcpy(header->size      , "013");
+        strcpy(header->size      , "015");
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -178,7 +178,7 @@ int fuzz_mode(char* executable)
         strcpy(header->name      , "mode");
         header->mode[pos] = c;
         char* content = "Hello World !";
-        strcpy(header->size      , "013");
+        strcpy(header->size      , "015");
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -217,8 +217,7 @@ int fuzz_mode(char* executable)
             strcpy(header->name      , "mode");
             header->mode[pos] = c;
             char* content = "Hello World !";
-            strcpy(header->size      , "013");
-            
+            strcpy(header->size      , "015");
             strcpy(header->magic     , "ustar"); // TMAGIC = ustar
             strcpy(header->version   , "00");
             calculate_checksum(header);
@@ -285,7 +284,7 @@ int fuzz_uid(char* executable)
         strcpy(header->mode     , "07777");
         header->uid[0] = c;
         char* content = "Hello World !";
-        strcpy(header->size      , "013");
+        strcpy(header->size      , "015");
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -311,7 +310,7 @@ int fuzz_uid(char* executable)
             return 1;
         }
     }
-    
+
     free(header);
     return 0;
 }
@@ -356,10 +355,11 @@ int fuzz_size(char* executable)
     {
         for(int i = 0; i< 8; i++)
         {
-            char c = '0' + i;
+            char c = i + 48; // convert int to char
 
             // Fill in the header
-            strcpy(header->name, "size");
+            strcpy(header->name      , "size");
+            strcpy(header->mode      , "07777");
             char* content = "Hello World !";
             header->size[pos] = c;
             
@@ -498,12 +498,12 @@ int fuzz_mtime(char* executable)
     {
         for(int i = 0; i< 8; i++)
         {
-            char c = '0' + i;
+            char c = i + 48;
 
             // Fill in the header
             strcpy(header->name, "mtime");
             char* content = "Hello World !";
-            strcpy(header->size, "013");
+            strcpy(header->size, "015");
             header->mtime[pos] = c;
             
             strcpy(header->magic     , "ustar"); // TMAGIC = ustar
@@ -534,19 +534,18 @@ int fuzz_mtime(char* executable)
         }
     }
 
-    printf("==== HERE 2 \n");
     strcpy(header->mtime, "00000000000");
 
     // Test every ascii and non ascii character at position 0
     for( int i = 0; i < 255; i++)
     {
-        char c = '0' +(char) i;
+        char c = i + 48;
         // Fill in the header
         strcpy(header->name      , "mtime");
+        strcpy(header->mode      , "07777");
         char* content = "Hello World !";
-        strcpy(header->size      , "013");
+        strcpy(header->size      , "015");
         header->mtime[0] = c;
-        
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -574,7 +573,6 @@ int fuzz_mtime(char* executable)
         }
     }
 
-    printf("==== HERE 3 \n");
     // Test a non ascii character at every position
     for( int pos = 0; pos < 11; pos++)
     {
@@ -583,7 +581,7 @@ int fuzz_mtime(char* executable)
         // Fill in the header
         strcpy(header->name      , "mtime");
         char* content = "Hello World !";
-        strcpy(header->size, "013");
+        strcpy(header->size, "015");
         header->mtime[pos] = c;
         
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
@@ -658,7 +656,7 @@ int fuzz_typeflag(char* executable)
         // Fill in the header
         strcpy(header->name     , "typeflag");
         char* content = "Hello World !";
-        strcpy(header->size      , "013");
+        strcpy(header->size      , "015");
         header->typeflag = c;
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
@@ -720,7 +718,7 @@ int fuzz_linkname(char* executable)
         // Fill in the header
         strcpy(header->name      , "linkname");
         char* content = "Hello World !";
-        strcpy(header->size, "013");
+        strcpy(header->size, "015");
         
         header->linkname[0] = c;
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
@@ -759,7 +757,7 @@ int fuzz_linkname(char* executable)
         // Fill in the header
         strcpy(header->name      , "linkname");
         char* content = "Hello World !";
-        strcpy(header->size, "013");
+        strcpy(header->size, "015");
         
         header->linkname[pos] = c;
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
@@ -860,7 +858,7 @@ int fuzz_magic(char* executable)
         // Fill in the header
         strcpy(header->name      , "magic");
         char* content = "Hello World !";
-        strcpy(header->size, "013");
+        strcpy(header->size, "015");
         
         header->magic[0] = c;
         strcpy(header->version   , "00");
@@ -898,7 +896,7 @@ int fuzz_magic(char* executable)
         // Fill in the header
         strcpy(header->name      , "magic");
         char* content = "Hello World !";
-        strcpy(header->size, "013");
+        strcpy(header->size, "015");
         
         header->magic[pos] = c;
         strcpy(header->version   , "00");
@@ -985,7 +983,7 @@ int fuzz_gname(char* executable)
         // Fill in the header
         strcpy(header->name      , "gname");
         char* content = "Hello World !";
-        strcpy(header->size, "013");
+        strcpy(header->size, "015");
         
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
@@ -1023,9 +1021,9 @@ int fuzz_gname(char* executable)
 
         // Fill in the header
         strcpy(header->name      , "gname");
+        strcpy(header->mode      , "07777");
         char* content = "Hello World !";
-        strcpy(header->size      , "013");
-        
+        strcpy(header->size      , "015");
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         header->gname[pos] = c;
@@ -1082,8 +1080,9 @@ int fuzz_end_of_archive(char* executable)
 
     // Fill in the header
     strcpy(header->name      , "end_of_archive");
+    strcpy(header->mode      , "07777");
     char* content = "Hello World !";
-    strcpy(header->size      , "013");
+    strcpy(header->size      , "015");
     strcpy(header->magic     , "ustar"); // TMAGIC = ustar
     strcpy(header->version   , "00");
     calculate_checksum(header);
@@ -1137,8 +1136,8 @@ int fuzz_header_no_data(char* executable)
 
     // Fill in the header
     strcpy(header->name      , "header_no_data");
+    strcpy(header->mode      , "07777");
     strcpy(header->size      , "00");
-    
     strcpy(header->magic     , "ustar"); // TMAGIC = ustar
     strcpy(header->version   , "00");
     calculate_checksum(header);
@@ -1195,7 +1194,7 @@ int fuzz_template(char* executable)
     strcpy(header->name      , "template");
     strcpy(header->mode      , "07777");
     char* content = "Hello World !";
-    strcpy(header->size      , "013");
+    strcpy(header->size      , "015");
     strcpy(header->magic     , "ustar"); // TMAGIC = ustar
     strcpy(header->version   , "00");
     calculate_checksum(header);
@@ -1253,13 +1252,13 @@ int main(int argc, char* argv[])
     {
         crashed += rslt;
     }
-*/
+
     // =============== FUZZ uid of the file ==================
     if( (rslt = fuzz_uid(argv[1])) != -1)
     {
         crashed += rslt;
     }
-/*
+
     // =============== FUZZ gid of the file ==================
 
 
@@ -1310,19 +1309,13 @@ int main(int argc, char* argv[])
     {
         crashed += rslt;
     }
-
-    // =============== FUZZ end of archive ==================
+*/
+    // =============== FUZZ header no data ==================
     if( (rslt = fuzz_header_no_data(argv[1])) != -1)
     {
         crashed += rslt;
     }
 
-    // =============== FUZZ template ==================
-    if( (rslt = fuzz_template(argv[1])) != -1)
-    {
-        crashed += rslt;
-    }
-*/
     printf("%d programs crashed \n", crashed);
     return EXIT_SUCCESS;
 }

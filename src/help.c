@@ -3,6 +3,8 @@
 
 #include "tar.h"
 
+int success_nb = 0;
+
 #define ERROR(descr, ...) fprintf(stderr, "Error: " descr "\n", ##__VA_ARGS__);
 /** 
  * Launches another executable given as argument,
@@ -45,6 +47,24 @@ int launches(char* executable)
     {
         printf("Crash message\n");
         rv = 1;
+        success_nb = success_nb + 1;
+                
+        // rename archive.tar by success_#number.tar
+        char new_name [16];
+        strcpy(new_name, "success_#");
+        char str[6];
+        str[0] = success_nb + '0';
+        str[1] = '.';
+        str[2] = 't';
+        str[3] = 'a';
+        str[4] = 'r';
+
+        strcat(new_name, str);
+        int ret; 
+        if( (ret = rename("archive.tar", new_name)) !=0) 
+        {
+            ERROR("Error archive.tar renaming");
+        }
         goto finally;
         
     } 
@@ -58,7 +78,7 @@ int launches(char* executable)
     finally:
     if(pclose(fp) == -1) 
     {
-        ERROR("Command not found\n");
+        ERROR("Command not found");
         rv = -1;
     }
     return rv;
