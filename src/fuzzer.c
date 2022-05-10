@@ -2,7 +2,7 @@
 #include <stdlib.h> // for malloc, calloc, free
 #include <string.h> // for strncpy, memset, strlen
 
-// https://ascii-tables.com/
+// rm !(Makefile|extractor) to clean the folder
 
 #include "tar.h"
 #include "help.h"
@@ -31,7 +31,7 @@ int fuzz_name(char* executable)
     }
 
     // Test every ascii and non ascii character at position 0
-    for( int i = 0; i < 255; i++)
+    for( int i = 1; i < 256; i++)
     {
         char c = (char) i;
         // Fill in the header
@@ -68,7 +68,7 @@ int fuzz_name(char* executable)
 
 
     // Test a non ascii character at every position
-    for( int pos = 0; pos < 100; pos++)
+    for( int pos = 0; pos < 99; pos++)
     {
         char c = (char) 128; // first non ascii character chosen
 
@@ -133,7 +133,7 @@ int fuzz_mode(char* executable)
     }
 
     // Test every ascii and non ascii character at position 0
-    for( int i = 0; i < 255; i++)
+    for( int i = 0; i < 256; i++)
     {
         char c = (char) i;
         // Fill in the header
@@ -275,7 +275,7 @@ int fuzz_uid(char* executable)
     }
     
     // Test all characters from ASCII table and extended ASCII table in the name: https://ascii-tables.com/
-    for(int i =0; i <255; i++)
+    for(int i =0; i <256; i++)
     {
         char c = (char) i;
 
@@ -392,7 +392,7 @@ int fuzz_size(char* executable)
     }
 
     // Test every ascii and non ascii character at position 0
-    for( int i = 0; i < 255; i++)
+    for( int i = 0; i < 256; i++)
     {
         char c = (char) i;
         // Fill in the header
@@ -498,14 +498,14 @@ int fuzz_mtime(char* executable)
     {
         for(int i = 0; i< 8; i++)
         {
-            char c = i + 48;
+            char c = i + 48; // convert int to corresponding char
 
             // Fill in the header
             strcpy(header->name, "mtime");
+            strcpy(header->mode, "07777");
             char* content = "Hello World !";
             strcpy(header->size, "015");
             header->mtime[pos] = c;
-            
             strcpy(header->magic     , "ustar"); // TMAGIC = ustar
             strcpy(header->version   , "00");
             calculate_checksum(header);
@@ -534,10 +534,8 @@ int fuzz_mtime(char* executable)
         }
     }
 
-    strcpy(header->mtime, "00000000000");
-
     // Test every ascii and non ascii character at position 0
-    for( int i = 0; i < 255; i++)
+    for( int i = 0; i < 256; i++)
     {
         char c = (char) i;
         // Fill in the header
@@ -649,12 +647,13 @@ int fuzz_typeflag(char* executable)
         return -1;
     }
     // Test all characters from ASCII table and extended ASCII table in the typeflag
-    for(int i =0; i <255; i++)
+    for(int i =0; i <256; i++)
     {
         char c = (char) i;
 
         // Fill in the header
         strcpy(header->name     , "typeflag");
+        strcpy(header->mode     , "07777");
         char* content = "Hello World !";
         strcpy(header->size      , "015");
         header->typeflag = c;
@@ -689,9 +688,7 @@ int fuzz_typeflag(char* executable)
 
 
 /**
- * @brief fuzz linkname by:
- * - testing every ascii and non ascii character at position 0
- * - testing a non ascii character at every position
+ * @brief fuzz linkname by: // overflow created here ??
  * - testing with linkname with a non ascii and without content into the archive
  * @param executable of the tar extractor
  * @return -1 if an error occured
@@ -709,17 +706,17 @@ int fuzz_linkname(char* executable)
         ERROR("Unable to malloc header");
         return -1;
     }
-
   
     // Test every ascii and non ascii character at position 0
-    for( int i = 0; i < 255; i++)
+    for( int i = 0; i < 256; i++)
     {
         char c = (char) i;
         // Fill in the header
         strcpy(header->name      , "linkname");
-        char* content = "Hello World !";
-        strcpy(header->size, "015");
-        
+        strcpy(header->mode      , "07777");
+        char* content =  NULL; //"Hello World !";
+        //strcpy(header->size      , "015");
+        header->typeflag = '2';
         header->linkname[0] = c;
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
@@ -750,15 +747,15 @@ int fuzz_linkname(char* executable)
 
 
     // Test a non ascii character at every position
-    for( int pos = 0; pos < 100; pos++)
+    for( int pos = 0; pos < 99; pos++)
     {
         char c = (char) 128; // first non ascii character chosen
 
         // Fill in the header
         strcpy(header->name      , "linkname");
-        char* content = "Hello World !";
-        strcpy(header->size, "015");
-        
+        char* content =  NULL; //"Hello World !";
+        //strcpy(header->size      , "015");
+        header->typeflag = '2';
         header->linkname[pos] = c;
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
@@ -789,13 +786,14 @@ int fuzz_linkname(char* executable)
 
 
     // Test a non ascii character at every position without content
-    for( int pos = 0; pos < 100; pos++)
+    for( int pos = 0; pos < 99; pos++)
     {
         char c = (char) 128; // first non ascii character chosen
 
         // Fill in the header
         strcpy(header->name      , "linkname");
-        strcpy(&header->typeflag , "2");     // g = Global extended header
+        strcpy(header->mode      , "07777");
+        header->typeflag = '2';
         header->linkname[pos] = c;
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
@@ -827,6 +825,7 @@ int fuzz_linkname(char* executable)
     free(header);
 
     return 0;
+    
 }
 
 /**
@@ -852,14 +851,14 @@ int fuzz_magic(char* executable)
 
   
     // Test every ascii and non ascii character at position 0
-    for( int i = 0; i < 255; i++)
+    for( int i = 0; i < 256; i++)
     {
         char c = (char) i;
         // Fill in the header
         strcpy(header->name      , "magic");
+        strcpy(header->mode      , "07777");
         char* content = "Hello World !";
         strcpy(header->size, "015");
-        
         header->magic[0] = c;
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -895,9 +894,9 @@ int fuzz_magic(char* executable)
 
         // Fill in the header
         strcpy(header->name      , "magic");
+        strcpy(header->mode      , "07777");
         char* content = "Hello World !";
-        strcpy(header->size, "015");
-        
+        strcpy(header->size      , "015");
         header->magic[pos] = c;
         strcpy(header->version   , "00");
         calculate_checksum(header);
@@ -977,11 +976,12 @@ int fuzz_gname(char* executable)
 
   
     // Test every ascii and non ascii character at position 0
-    for( int i = 0; i < 255; i++)
+    for( int i = 0; i < 256; i++)
     {
         char c = (char) i;
         // Fill in the header
         strcpy(header->name      , "gname");
+        strcpy(header->mode      , "07777");
         char* content = "Hello World !";
         strcpy(header->size, "015");
         
@@ -1015,7 +1015,7 @@ int fuzz_gname(char* executable)
 
 
     // Test a non ascii character at every position
-    for( int pos = 0; pos < 32; pos++)
+    for( int pos = 0; pos < 31; pos++)
     {
         char c = (char) 128; // first non ascii character chosen
 
@@ -1170,64 +1170,6 @@ int fuzz_header_no_data(char* executable)
 }
 
 
-/**
- * @brief fuzz by:
- * - 
- * @param executable of the tar extractor
- * @return -1 if an error occured
- *          0 if no erroneous archive has been found
- *          1 if a erroneous archive has been found
- */
-int fuzz_template(char* executable)
-{
-    printf("===== fuzz  \n");
-
-    // archive creation 
-    struct tar_t* header;
-    if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
-    {
-        ERROR("Unable to malloc header");
-        return -1;
-    }
-
-    // Fill in the header
-    strcpy(header->name      , "template");
-    strcpy(header->mode      , "07777");
-    char* content = "Hello World !";
-    strcpy(header->size      , "015");
-    strcpy(header->magic     , "ustar"); // TMAGIC = ustar
-    strcpy(header->version   , "00");
-    calculate_checksum(header);
-
-    // Write header
-    if( tar_write("archive.tar", header, content) == -1)
-    {
-        ERROR("Unable to write the tar file");
-        free(header);
-        return -1;
-    }
-
-    int rv;
-    if( (rv = launches(executable)) == -1 )
-    {
-        ERROR("Error in launches");
-        free(header);
-        return -1;
-    }
-    else if (rv == 1)
-    // *** The program has crashed ***
-    {
-        printf("--- AN ERRONEOUS ARCHIVE FOUND \n");
-        return 1;
-    }
-
-    free(header);
-
-    return 0;
-}
-
-
-
 
 // =============================================
 int main(int argc, char* argv[])
@@ -1240,7 +1182,7 @@ int main(int argc, char* argv[])
 
     int crashed = 0; // count the number of program that crashed
     int rslt;
-/*
+
     // =============== FUZZ name of the file ==================
     if( (rslt = fuzz_name(argv[1])) != -1)
     {
@@ -1282,18 +1224,21 @@ int main(int argc, char* argv[])
     {
         crashed += rslt;
     }
-
+    
     // =============== FUZZ linkname of the file ==================
     if( (rslt = fuzz_linkname(argv[1])) != -1)
     {
         crashed += rslt;
     }
-    
+
+/////////////////////////////////////////////////
+      
     // =============== FUZZ magic of the file ==================
     if( (rslt = fuzz_magic(argv[1])) != -1)
     {
         crashed += rslt;
     }
+
 
     // =============== FUZZ version of the file ==================
 
@@ -1309,7 +1254,7 @@ int main(int argc, char* argv[])
     {
         crashed += rslt;
     }
-*/
+
     // =============== FUZZ header no data ==================
     if( (rslt = fuzz_header_no_data(argv[1])) != -1)
     {
