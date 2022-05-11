@@ -31,7 +31,7 @@ int fuzz_name(char* executable)
     }
 
     // Test every ascii and non ascii character at position 0
-    for( int i = 1; i < 256; i++)
+    for( int i = 1; i < 255; i++)
     {
         char c = (char) i;
         // Fill in the header
@@ -133,7 +133,7 @@ int fuzz_mode(char* executable)
     }
 
     // Test every ascii and non ascii character at position 0
-    for( int i = 0; i < 256; i++)
+    for( int i = 0; i < 255; i++)
     {
         char c = (char) i;
         // Fill in the header
@@ -170,7 +170,7 @@ int fuzz_mode(char* executable)
 
 
     // Test a non ascii character at every position
-    for( int pos = 0; pos < 8; pos++)
+    for( int pos = 0; pos < 7; pos++)
     {
         char c = (char) 128; // first non ascii character chosen
 
@@ -207,7 +207,7 @@ int fuzz_mode(char* executable)
     }
 
     // Test every number at every position
-    for(int pos = 0; pos < 8; pos ++)
+    for(int pos = 0; pos < 7; pos ++)
     {
         for(int i = 0; i< 10; i++)
         {
@@ -277,7 +277,7 @@ int fuzz_uid(char* executable)
     }
 
     // Test all characters from ASCII table and extended ASCII table in the name: https://ascii-tables.com/
-    for(int i =0; i <256; i++)
+    for(int i =0; i <255; i++)
     {
         char c = (char) i;
 
@@ -313,7 +313,7 @@ int fuzz_uid(char* executable)
         }
     }
     // Test a non ascii character at every position
-    for( int pos = 0; pos < 8; pos++)
+    for( int pos = 0; pos < 7; pos++)
     {
         char c = (char) 128; // first non ascii character chosen
 
@@ -351,7 +351,7 @@ int fuzz_uid(char* executable)
     }
 
     // Test every number at every position
-    for(int pos = 0; pos < 8; pos ++)
+    for(int pos = 0; pos < 7; pos ++)
     {
         for(int i = 0; i< 10; i++)
         {
@@ -486,7 +486,7 @@ int fuzz_size(char* executable)
     }
 
     // Test all octal value at all position
-    for(int pos = 0; pos < 12; pos++)
+    for(int pos = 0; pos < 11; pos++)
     {
         for(int i = 0; i< 8; i++)
         {
@@ -527,11 +527,12 @@ int fuzz_size(char* executable)
     }
 
     // Test every ascii and non ascii character at position 0
-    for( int i = 0; i < 256; i++)
+    for( int i = 0; i < 255; i++)
     {
         char c = (char) i;
         // Fill in the header
         strcpy(header->name      , "size");
+        strcpy(header->mode      , "07777");
         char* content = "Hello World !";
         header->size[0] = c;
 
@@ -564,12 +565,13 @@ int fuzz_size(char* executable)
 
 
     // Test a non ascii character at every position
-    for( int pos = 0; pos < 12; pos++)
+    for( int pos = 0; pos < 11; pos++)
     {
         char c = (char) 128; // first non ascii character chosen
 
         // Fill in the header
         strcpy(header->name      , "size");
+        strcpy(header->mode      , "07777");
         char* content = "Hello World !";
         header->size[pos] = c;
 
@@ -670,7 +672,7 @@ int fuzz_mtime(char* executable)
     }
 
     // Test every ascii and non ascii character at position 0
-    for( int i = 0; i < 256; i++)
+    for( int i = 0; i < 255; i++)
     {
         char c = (char) i;
         // Fill in the header
@@ -713,6 +715,7 @@ int fuzz_mtime(char* executable)
 
         // Fill in the header
         strcpy(header->name      , "mtime");
+        strcpy(header->mode      , "07777");
         char* content = "Hello World !";
         strcpy(header->size, "015");
         header->mtime[pos] = c;
@@ -810,7 +813,7 @@ int fuzz_chksum(char* executable)
         }
     }
     // Test a non ascii character at every position
-    for( int pos = 0; pos < 8; pos++)
+    for( int pos = 0; pos < 7; pos++)
     {
         char c = (char) 128; // first non ascii character chosen
 
@@ -848,7 +851,7 @@ int fuzz_chksum(char* executable)
     }
 
     // Test every number at every position
-    for(int pos = 0; pos < 8; pos ++)
+    for(int pos = 0; pos < 7; pos ++)
     {
         for(int i = 0; i< 10; i++)
         {
@@ -914,7 +917,7 @@ int fuzz_typeflag(char* executable)
         return -1;
     }
     // Test all characters from ASCII table and extended ASCII table in the typeflag
-    for(int i =0; i <256; i++)
+    for(int i =0; i <255; i++)
     {
         char c = (char) i;
 
@@ -975,15 +978,14 @@ int fuzz_linkname(char* executable)
     }
 
     // Test every ascii and non ascii character at position 0
-    for( int i = 0; i < 256; i++)
+    for( int i = 0; i < 255; i++)
     {
         char c = (char) i;
         // Fill in the header
         strcpy(header->name      , "linkname");
         strcpy(header->mode      , "07777");
-        char* content =  NULL; //"Hello World !";
-        //strcpy(header->size      , "015");
-        header->typeflag = '2';
+        char* content =  "Hello World !";
+        strcpy(header->size      , "015");
         header->linkname[0] = c;
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
@@ -1020,9 +1022,9 @@ int fuzz_linkname(char* executable)
 
         // Fill in the header
         strcpy(header->name      , "linkname");
-        char* content =  NULL; //"Hello World !";
-        //strcpy(header->size      , "015");
-        header->typeflag = '2';
+        strcpy(header->mode     , "07777");
+        char* content = "Hello World !";
+        strcpy(header->size      , "015");
         header->linkname[pos] = c;
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
@@ -1060,14 +1062,15 @@ int fuzz_linkname(char* executable)
         // Fill in the header
         strcpy(header->name      , "linkname");
         strcpy(header->mode      , "07777");
-        header->typeflag = '2';
+        char* content = "Hello World !";
+        strcpy(header->size, "015");
         header->linkname[pos] = c;
         strcpy(header->magic     , "ustar"); // TMAGIC = ustar
         strcpy(header->version   , "00");
         calculate_checksum(header);
 
         // Write header and file into archive
-        if( tar_write("archive.tar", header, NULL) == -1)
+        if( tar_write("archive.tar", header, content) == -1)
         {
             ERROR("Unable to write the tar file");
             free(header);
@@ -1118,7 +1121,7 @@ int fuzz_magic(char* executable)
 
 
     // Test every ascii and non ascii character at position 0
-    for( int i = 0; i < 256; i++)
+    for( int i = 0; i < 255; i++)
     {
         char c = (char) i;
         // Fill in the header
@@ -1255,7 +1258,7 @@ int fuzz_magic(char* executable)
          }
      }
      // Test a non ascii character at every position
-     for( int pos = 0; pos < 8; pos++)
+     for( int pos = 0; pos < 7; pos++)
      {
          char c = (char) 128; // first non ascii character chosen
 
@@ -1292,7 +1295,7 @@ int fuzz_magic(char* executable)
      }
 
      // Test every number at every position
-     for(int pos = 0; pos < 2; pos ++)
+     for(int pos = 0; pos < 1; pos ++)
      {
          for(int i = 0; i< 10; i++)
          {
@@ -1396,7 +1399,7 @@ int fuzz_uname(char* executable)
         }
     }
     // Test a non ascii character at every position
-    for( int pos = 0; pos < 32; pos++)
+    for( int pos = 0; pos < 31; pos++)
     {
         char c = (char) 128; // first non ascii character chosen
 
@@ -1434,7 +1437,7 @@ int fuzz_uname(char* executable)
     }
 
     // Test every number at every position
-    for(int pos = 0; pos < 32; pos ++)
+    for(int pos = 0; pos < 31; pos ++)
     {
         for(int i = 0; i< 10; i++)
         {
@@ -1503,7 +1506,7 @@ int fuzz_gname(char* executable)
 
 
     // Test every ascii and non ascii character at position 0
-    for( int i = 0; i < 256; i++)
+    for( int i = 0; i < 255; i++)
     {
         char c = (char) i;
         // Fill in the header
@@ -1709,7 +1712,7 @@ int main(int argc, char* argv[])
 
     int crashed = 0; // count the number of program that crashed
     int rslt;
-
+/*
     // =============== FUZZ name of the file ==================
     if( (rslt = fuzz_name(argv[1])) != -1)
     {
@@ -1778,8 +1781,8 @@ int main(int argc, char* argv[])
     {
         crashed += rslt;
     }
-
-*/    // =============== FUZZ uname of the file ==================
+*/
+    // =============== FUZZ uname of the file ==================
     if( (rslt = fuzz_uname(argv[1])) != -1)
     {
         crashed += rslt;
@@ -1802,7 +1805,7 @@ int main(int argc, char* argv[])
     {
         crashed += rslt;
     }
-
+*/
     printf("%d programs crashed \n", crashed);
     return EXIT_SUCCESS;
 }
