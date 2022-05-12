@@ -1,3 +1,13 @@
+/**
+ * @file help.c
+ * @author Merlin Camberlin (0944-1700), Zoé Schoofs (3502-1700)
+ * @brief This file contains helpers functions used in fuzzer.c but that does not really belong to the fuzzing part of the project.
+ * @version 0.1
+ * @date 2022-05-13
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include <stdio.h>
 #include <string.h>
 

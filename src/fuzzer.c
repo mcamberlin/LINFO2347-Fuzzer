@@ -1,8 +1,17 @@
+/**
+ * @file fuzzer.c
+ * @author Merlin Camberlin (0944-1700), Zoé Schoofs (3502-1700)
+ * @brief This file contains multiple functions which purpose is to fuzz the generation of an tar archive.
+ * @version 0.1
+ * @date 2022-05-13
+ * @tool To clean the folder run this command: rm !(Makefile|extractor|*.tar) 
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include <stdio.h> // for printf, fprintf
 #include <stdlib.h> // for malloc, calloc, free
 #include <string.h> // for strncpy, memset, strlen
-
-// rm !(Makefile|extractor) to clean the folder
 
 #include "tar.h"
 #include "help.h"
@@ -22,7 +31,7 @@ int fuzz_name(char* executable)
 {
     printf("===== fuzz name \n");
 
-    // archive creation
+    // header creation
     struct tar_t* header;
     if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
     {
@@ -124,7 +133,7 @@ int fuzz_mode(char* executable)
 {
     printf("===== fuzz mode \n");
 
-    // archive creation
+    // header creation
     struct tar_t* header;
     if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
     {
@@ -268,7 +277,7 @@ int fuzz_uid(char* executable)
 {
     printf("===== fuzz uid \n");
 
-    // archive creation
+    // header creation
     struct tar_t* header;
     if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
     {
@@ -413,7 +422,7 @@ int fuzz_uid(char* executable)
  {
    printf("===== fuzz gid \n");
 
-   // archive creation
+   // header creation
    struct tar_t* header;
    if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
    {
@@ -481,7 +490,7 @@ int fuzz_size(char* executable)
 {
     printf("===== fuzz size \n");
 
-    // archive creation
+    // header creation
     struct tar_t* header;
     if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
     {
@@ -626,7 +635,7 @@ int fuzz_mtime(char* executable)
 {
     printf("===== fuzz mtime \n");
 
-    // archive creation
+    // header creation
     struct tar_t* header;
     if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
     {
@@ -772,7 +781,7 @@ int fuzz_chksum(char* executable)
 {
     printf("===== fuzz chksum \n");
 
-    // archive creation
+    // header creation
     struct tar_t* header;
     if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
     {
@@ -913,7 +922,7 @@ int fuzz_typeflag(char* executable)
 {
     printf("===== fuzz typeflag \n");
 
-    // archive creation
+    // header creation
     struct tar_t* header;
     if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
     {
@@ -973,7 +982,7 @@ int fuzz_linkname(char* executable)
 {
     printf("===== fuzz linkname \n");
 
-    // archive creation
+    // header creation
     struct tar_t* header;
     if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
     {
@@ -1075,7 +1084,7 @@ int fuzz_magic(char* executable)
 {
     printf("===== fuzz magic \n");
 
-    // archive creation
+    // header creation
     struct tar_t* header;
     if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
     {
@@ -1178,7 +1187,7 @@ int fuzz_magic(char* executable)
  {
      printf("===== fuzz version \n");
 
-     // archive creation
+     // header creation
      struct tar_t* header;
      if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
      {
@@ -1318,7 +1327,7 @@ int fuzz_uname(char* executable)
 {
     printf("===== fuzz uname \n");
 
-    // archive creation
+    // header creation
     struct tar_t* header;
     if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
     {
@@ -1461,7 +1470,7 @@ int fuzz_gname(char* executable)
 {
     printf("===== fuzz gname \n");
 
-    // archive creation
+    // header creation
     struct tar_t* header;
     if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
     {
@@ -1565,7 +1574,7 @@ int fuzz_end_of_archive(char* executable)
 {
     printf("===== fuzz end of archive \n");
 
-    // archive creation
+    // header creation
     struct tar_t* header;
     if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
     {
@@ -1622,7 +1631,7 @@ int fuzz_data_content(char* executable)
 {
     printf("===== fuzz data content \n");
 
-    // archive creation
+    // header creation
     struct tar_t* header;
     if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
     {
@@ -1725,7 +1734,7 @@ int fuzz_header_no_data(char* executable)
 {
     printf("===== fuzz header no data \n");
 
-    // archive creation
+    // header creation
     struct tar_t* header;
     if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
     {
@@ -1769,6 +1778,93 @@ int fuzz_header_no_data(char* executable)
 }
 
 
+/**
+ * @brief fuzz multiple files by:
+ * - creating archive with multiple file entries (header + data) 
+ * @param executable of the tar extractor
+ * @return -1 if an error occured
+ *          0 if no erroneous archive has been found
+ *          1 if a erroneous archive has been found
+ */
+int fuzz_multiple_files(char* executable)
+{
+     printf("===== fuzz multiple files \n");
+
+    int n = 10; // the number of file entries to put inside the archive
+
+    struct tar_t* header;
+    struct tar_t** headers;
+    if( (headers = (struct tar_t**) malloc(n *sizeof(struct tar_t*))) == NULL)
+    {
+        ERROR("Unable to malloc headers");
+        return -1;
+    }
+
+    char* content = "Hello World !";
+    char** contents;
+    if( (contents = (char**) malloc(n *sizeof(char*))) == NULL)
+    {
+        ERROR("Unable to malloc contents");
+        return -1;
+    }
+
+    for(int i = 0; i< n; i++)
+    {
+        // header creation
+        if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
+        {
+            ERROR("Unable to malloc header");
+            return -1;
+        }
+
+        // Fill in the header
+        char name[6];
+        sprintf(name, "file%d", i);
+        strcpy(header->name      , name);
+        strcpy(header->mode      , "07777");
+        sprintf(header->size, "%lo", strlen(content));
+        strcpy(header->magic     , "ustar"); // TMAGIC = ustar
+        strcpy(header->version   , "00");
+        calculate_checksum(header);
+
+        headers[i] = header;
+        contents[i] = content;
+    }
+    
+    // Write headers and contents into archive
+    if( tar_write_multiple_files("archive.tar", headers, contents, n) == -1)
+    {
+        ERROR("Unable to write multiple files into the tar file");
+        free(header);
+        free(headers);
+        free(contents);
+        return -1;
+    }
+
+    int rv;
+    if( (rv = launches(executable)) == -1 )
+    {
+        ERROR("Error in launches");
+        free(header);
+        free(headers);
+        free(contents);
+        return -1;
+    }
+    else if (rv == 1)
+    // *** The program has crashed ***
+    {
+        printf("--- AN ERRONEOUS ARCHIVE FOUND \n");
+        free(header);
+        free(headers);
+        free(contents);
+        return 1;
+    }
+   
+    free(header);
+    free(headers);
+    free(contents);
+    return 0;
+}
 
 // =============================================
 int main(int argc, char* argv[])
@@ -1781,7 +1877,7 @@ int main(int argc, char* argv[])
 
     int crashed = 0; // count the number of program that crashed
     int rslt;
-
+/*
     // =============== FUZZ name of the file ==================
     if( (rslt = fuzz_name(argv[1])) != -1)
     {
@@ -1873,7 +1969,7 @@ int main(int argc, char* argv[])
     }
 
 
-    // =============== FUZZ content data ==================
+    // =============== FUZZ content of data ==================
     // lead to crash BUT NOT DETECTED BY INGINIOUS :/ 
     if( (rslt = fuzz_data_content(argv[1])) != -1)
     {
@@ -1882,6 +1978,12 @@ int main(int argc, char* argv[])
 
     // =============== FUZZ header no data ==================
     if( (rslt = fuzz_header_no_data(argv[1])) != -1)
+    {
+        crashed += rslt;
+    }
+*/
+    // =============== FUZZ multiple files ==================
+    if( (rslt = fuzz_multiple_files(argv[1])) != -1)
     {
         crashed += rslt;
     }

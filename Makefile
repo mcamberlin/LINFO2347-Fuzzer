@@ -4,7 +4,6 @@ CFLAGS += -Werror 		# Convert every warning into errors
 CFLAGS += -Wshadow 		# Warn when shadowing variables
 CFLAGS += -Wextra 		# Enable additional warnings
 
-# 
 all: fuzzer
 
 fuzzer : 
