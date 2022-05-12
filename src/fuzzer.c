@@ -1315,9 +1315,9 @@ int fuzz_magic(char* executable)
 
 /**
  * @brief fuzz uname by:
- * -
- * -
- * -
+ * - testing every ascii and non ascii character at position 0
+ * - testing a non ascii character at every position
+ * - testing every number at every position
  * @param executable of the tar extractor
  * @return -1 if an error occured
  *          0 if no erroneous archive has been found
@@ -1335,7 +1335,7 @@ int fuzz_uname(char* executable)
         return -1;
     }
 
-    // Test all characters from ASCII table and extended ASCII table in the name: https://ascii-tables.com/
+    // Test every ascii and non ascii character at position 0
     for(int i =0; i <255; i++)
     {
         char c = (char) i;
@@ -1371,6 +1371,7 @@ int fuzz_uname(char* executable)
             return 1;
         }
     }
+    
     // Test a non ascii character at every position
     for( int pos = 0; pos < 32; pos++)
     {
@@ -1711,7 +1712,7 @@ int fuzz_data_content(char* executable)
         else if (rv == 1)
         // *** The program has crashed ***
         {
-            ERROR("--- AN ERRONEOUS ARCHIVE FOUND");
+            printf("--- AN ERRONEOUS ARCHIVE FOUND \n");
             return 1;
         }
     }
@@ -1866,7 +1867,97 @@ int fuzz_multiple_files(char* executable)
     return 0;
 }
 
-// =============================================
+/**
+ * @brief fuzz multiple files without data by:
+ * - creating archive with multiple file entries (header only) 
+ * @param executable of the tar extractor
+ * @return -1 if an error occured
+ *          0 if no erroneous archive has been found
+ *          1 if a erroneous archive has been found
+ */
+int fuzz_multiple_files_without_data(char* executable)
+{
+     printf("===== fuzz multiple files without data \n");
+
+    int n = 10; // the number of file entries to put inside the archive
+
+    struct tar_t* header;
+    struct tar_t** headers;
+    if( (headers = (struct tar_t**) malloc(n *sizeof(struct tar_t*))) == NULL)
+    {
+        ERROR("Unable to malloc headers");
+        return -1;
+    }
+    
+    // char* content = "Hello World !";
+    
+    char** contents;
+    if( (contents = (char**) malloc(n *sizeof(char*))) == NULL)
+    {
+        ERROR("Unable to malloc contents");
+        return -1;
+    }
+    
+
+    for(int i = 0; i< n; i++)
+    {
+        // header creation
+        if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
+        {
+            ERROR("Unable to malloc header");
+            return -1;
+        }
+
+        // Fill in the header
+        char name[6];
+        sprintf(name, "file%d", i);
+        strcpy(header->name      , name);
+        strcpy(header->mode      , "07777");
+        strcpy(header->size      , "00");
+        strcpy(header->magic     , "ustar"); // TMAGIC = ustar
+        strcpy(header->version   , "00");
+        calculate_checksum(header);
+
+        headers[i] = header;
+        contents[i] = NULL; // !!!
+    }
+    
+    // Write headers and contents into archive
+    if( tar_write_multiple_files("archive.tar", headers, contents, n) == -1)
+    {
+        ERROR("Unable to write multiple files into the tar file");
+        free(header);
+        free(headers);
+        free(contents);
+        return -1;
+    }
+
+    int rv;
+    if( (rv = launches(executable)) == -1 )
+    {
+        ERROR("Error in launches");
+        free(header);
+        free(headers);
+        free(contents);
+        return -1;
+    }
+    else if (rv == 1)
+    // *** The program has crashed ***
+    {
+        printf("--- AN ERRONEOUS ARCHIVE FOUND \n");
+        free(header);
+        free(headers);
+        free(contents);
+        return 1;
+    }
+   
+    free(header);
+    free(headers);
+    free(contents);
+    return 0;
+}
+
+// ================================================================================
 int main(int argc, char* argv[])
 {
     if (argc < 2)
@@ -1984,6 +2075,12 @@ int main(int argc, char* argv[])
 */
     // =============== FUZZ multiple files ==================
     if( (rslt = fuzz_multiple_files(argv[1])) != -1)
+    {
+        crashed += rslt;
+    }
+
+    // =============== FUZZ multiple files without data ==================
+    if( (rslt = fuzz_multiple_files_without_data(argv[1])) != -1)
     {
         crashed += rslt;
     }
