@@ -276,6 +276,45 @@ int fuzz_uid(char* executable)
         return -1;
     }
 
+    // Test a non ascii character at every position
+    for( int pos = 0; pos < 8; pos++)
+    {
+        char c = (char) 128; // first non ascii character chosen
+
+        // Fill in the header
+        strcpy(header->name      , "uid");
+        strcpy(header->mode     , "07777");
+        header->uid[pos] = c;
+        char* content = "Hello World !";
+        strcpy(header->size      , "015");
+        strcpy(header->magic     , "ustar"); // TMAGIC = ustar
+        strcpy(header->version   , "00");
+        calculate_checksum(header);
+
+        // Write header and file into archive
+        if( tar_write("archive.tar", header, content) == -1)
+        {
+            ERROR("Unable to write the tar file");
+            free(header);
+            return -1;
+        }
+
+        int rv;
+        if( (rv = launches(executable)) == -1 )
+        {
+            ERROR("Error in launches");
+            free(header);
+            return -1;
+        }
+        else if (rv == 1)
+        // *** The program has crashed ***
+        {
+            ERROR("FOUND AN ARCHIVE THAT CRASHED");
+            return 1;
+        }
+    }
+
+    
     // Test all characters from ASCII table and extended ASCII table in the name: https://ascii-tables.com/
     for(int i =0; i <256; i++)
     {
@@ -312,43 +351,7 @@ int fuzz_uid(char* executable)
             return 1;
         }
     }
-    // Test a non ascii character at every position
-    for( int pos = 0; pos < 8; pos++)
-    {
-        char c = (char) 128; // first non ascii character chosen
-
-        // Fill in the header
-        strcpy(header->name      , "uid");
-        strcpy(header->mode     , "07777");
-        header->uid[pos] = c;
-        char* content = "Hello World !";
-        strcpy(header->size      , "015");
-        strcpy(header->magic     , "ustar"); // TMAGIC = ustar
-        strcpy(header->version   , "00");
-        calculate_checksum(header);
-
-        // Write header and file into archive
-        if( tar_write("archive.tar", header, content) == -1)
-        {
-            ERROR("Unable to write the tar file");
-            free(header);
-            return -1;
-        }
-
-        int rv;
-        if( (rv = launches(executable)) == -1 )
-        {
-            ERROR("Error in launches");
-            free(header);
-            return -1;
-        }
-        else if (rv == 1)
-        // *** The program has crashed ***
-        {
-            printf("--- AN ERRONEOUS ARCHIVE FOUND \n");
-            return 1;
-        }
-    }
+    
 
     // Test every number at every position
     for(int pos = 0; pos < 8; pos ++)
@@ -406,7 +409,8 @@ int fuzz_uid(char* executable)
  *          0 if no erroneous archive has been found
  *          1 if a erroneous archive has been found
  */
- int fuzz_gid(char* executable){
+ int fuzz_gid(char* executable)
+ {
    printf("===== fuzz gid \n");
 
    // archive creation
@@ -958,7 +962,7 @@ int fuzz_typeflag(char* executable)
 
 
 /**
- * @brief fuzz linkname by: // overflow created here ??
+ * @brief fuzz linkname by: 
  * - testing with linkname with a non ascii and without content into the archive
  * @param executable of the tar extractor
  * @return -1 if an error occured
@@ -1162,9 +1166,9 @@ int fuzz_magic(char* executable)
 
 /**
  * @brief fuzz version by:
- * -
- * -
- * -
+ * - testing every ascii and non ascii character at position 0
+ * - testing a non ascii character at every position
+ * - testing every number at every position
  * @param executable of the tar extractor
  * @return -1 if an error occured
  *          0 if no erroneous archive has been found
@@ -1249,7 +1253,7 @@ int fuzz_magic(char* executable)
          else if (rv == 1)
          // *** The program has crashed ***
          {
-             printf("--- AN ERRONEOUS ARCHIVE FOUND \n");
+             ERROR("FOUND AN ARCHIVE THAT CRASHED");
              return 1;
          }
      }
@@ -1606,6 +1610,110 @@ int fuzz_end_of_archive(char* executable)
 }
 
 /**
+ * @brief fuzz data content by:
+ * - testing every ascii and non ascii character at position 0
+ * - testing a non ascii character in the content at every position until 999th
+ * @param executable of the tar extractor
+ * @return -1 if an error occured
+ *          0 if no erroneous archive has been found
+ *          1 if a erroneous archive has been found
+ */
+int fuzz_data_content(char* executable)
+{
+    printf("===== fuzz data content \n");
+
+    // archive creation
+    struct tar_t* header;
+    if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
+    {
+        ERROR("Unable to malloc header");
+        return -1;
+    }
+
+    // Test every ascii and non ascii character at position 0
+    for( int i = 1; i < 256; i++)
+    {
+        char c = (char) i;
+        // Fill in the header
+        strcpy(header->name      , "data_content");
+        strcpy(header->mode      , "07777");
+        char content[2] = {c, '\0'};
+        sprintf(header->size, "%lo", strlen(content));
+        strcpy(header->magic     , "ustar"); // TMAGIC = ustar
+        strcpy(header->version   , "00");
+        calculate_checksum(header);
+
+        // Write header and file into archive
+        if( tar_write("archive.tar", header, content) == -1)
+        {
+            ERROR("Unable to write the tar file");
+            free(header);
+            return -1;
+        }
+
+        int rv;
+        if( (rv = launches(executable)) == -1 )
+        {
+            ERROR("Error in launches");
+            free(header);
+            return -1;
+        }
+        else if (rv == 1)
+        // *** The program has crashed ***
+        {
+            printf("--- AN ERRONEOUS ARCHIVE FOUND \n");
+            return 1;
+        }
+    }
+
+    // Test a non ascii character in the content at every position until 999th
+    for( int pos = 2; pos < 999; pos++)
+    {
+        char c = (char) 128; // first non ascii character chosen
+
+        // Fill in the header
+        strcpy(header->name      , "data_content");
+        strcpy(header->mode      , "07777");
+        char content[pos];
+        
+        content[pos-2] = c;
+        content[pos-1] = '\0';
+
+        sprintf(header->size, "%o", pos);
+        strcpy(header->magic     , "ustar"); // TMAGIC = ustar
+        strcpy(header->version   , "00");
+        calculate_checksum(header);
+
+        // Write header and file into archive
+        if( tar_write("archive.tar", header, content) == -1)
+        {
+            ERROR("Unable to write the tar file");
+            free(header);
+            return -1;
+        }
+
+        int rv;
+        if( (rv = launches(executable)) == -1 )
+        {
+            ERROR("Error in launches");
+            free(header);
+            return -1;
+        }
+        else if (rv == 1)
+        // *** The program has crashed ***
+        {
+            ERROR("--- AN ERRONEOUS ARCHIVE FOUND");
+            return 1;
+        }
+    }
+
+    free(header);
+
+    return 0;
+}
+
+
+/**
  * @brief fuzz header no data by:
  * - creating archive with header filled like a file would be stored in it but in fact archive does not contain data
  * @param executable of the tar extractor
@@ -1687,6 +1795,7 @@ int main(int argc, char* argv[])
     }
 
     // =============== FUZZ uid of the file ==================
+    // lead to crash
     if( (rslt = fuzz_uid(argv[1])) != -1)
     {
         crashed += rslt;
@@ -1699,6 +1808,7 @@ int main(int argc, char* argv[])
     }
 
     // =============== FUZZ size of the file ==================
+    // lead to crash
     if( (rslt = fuzz_size(argv[1])) != -1)
     {
         crashed += rslt;
@@ -1717,6 +1827,7 @@ int main(int argc, char* argv[])
     }
 
     // =============== FUZZ typeflag of the file ==================
+    // lead to crash
     if( (rslt = fuzz_typeflag(argv[1])) != -1)
     {
         crashed += rslt;
@@ -1734,7 +1845,9 @@ int main(int argc, char* argv[])
         crashed += rslt;
     }
 
+
     // =============== FUZZ version of the file ==================
+    // lead to crash
     if( (rslt = fuzz_version(argv[1])) != -1)
     {
         crashed += rslt;
@@ -1753,10 +1866,19 @@ int main(int argc, char* argv[])
     }
 
     // =============== FUZZ end of archive ==================
+    // lead to crash BUT NOT DETECTED BY INGINIOUS :/ 
     if( (rslt = fuzz_end_of_archive(argv[1])) != -1)
     {
         crashed += rslt;
-   }
+    }
+
+
+    // =============== FUZZ content data ==================
+    // lead to crash BUT NOT DETECTED BY INGINIOUS :/ 
+    if( (rslt = fuzz_data_content(argv[1])) != -1)
+    {
+        crashed += rslt;
+    }
 
     // =============== FUZZ header no data ==================
     if( (rslt = fuzz_header_no_data(argv[1])) != -1)

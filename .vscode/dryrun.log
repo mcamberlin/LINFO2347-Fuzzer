@@ -1,0 +1,5 @@
+make --dry-run --keep-going --print-directory
+make: Entering directory '/home/merlin/LINFO2347-Fuzzer'
+gcc -o fuzzer src/help.c src/tar.c src/fuzzer.c -lz -std=gnu99 	 -Wall 		 -Werror 		 -Wshadow 		 -Wextra 		
+make: Leaving directory '/home/merlin/LINFO2347-Fuzzer'
+ 
