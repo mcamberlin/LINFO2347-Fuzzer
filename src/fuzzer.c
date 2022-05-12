@@ -1564,14 +1564,14 @@ int fuzz_gname(char* executable)
 
 
 /**
- * @brief fuzz end of archive by:
+ * @brief fuzz no end of archive by:
  * - creating archive without end-of-archive marker (2x 512-byte zero bytes blocks)
  * @param executable of the tar extractor
  * @return -1 if an error occured
  *          0 if no erroneous archive has been found
  *          1 if a erroneous archive has been found
  */
-int fuzz_end_of_archive(char* executable)
+int fuzz_no_end_of_archive(char* executable)
 {
     printf("===== fuzz end of archive \n");
 
@@ -1596,6 +1596,62 @@ int fuzz_end_of_archive(char* executable)
     if( tar_write_without_end_of_archive("archive.tar", header, content) == -1)
     {
         ERROR("Unable to write the tar file");
+        free(header);
+        return -1;
+    }
+
+    int rv;
+    if( (rv = launches(executable)) == -1 )
+    {
+        ERROR("Error in launches");
+        free(header);
+        return -1;
+    }
+    else if (rv == 1)
+    // *** The program has crashed ***
+    {
+        printf("--- AN ERRONEOUS ARCHIVE FOUND \n");
+        return 1;
+    }
+
+    free(header);
+
+    return 0;
+}
+
+/**
+ * @brief fuzz no padding by:
+ * - creating an archive without padding at the end of the file
+ * @param executable of the tar extractor
+ * @return -1 if an error occured
+ *          0 if no erroneous archive has been found
+ *          1 if a erroneous archive has been found
+ */
+int fuzz_no_padding(char* executable)
+{
+    printf("===== fuzz no padding \n");
+
+    // header creation
+    struct tar_t* header;
+    if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
+    {
+        ERROR("Unable to malloc header");
+        return -1;
+    }
+
+    // Fill in the header
+    strcpy(header->name      , "no_padding");
+    strcpy(header->mode      , "07777");
+    char* content = "Hello World !";
+    strcpy(header->size      , "015");
+    strcpy(header->magic     , "ustar"); // TMAGIC = ustar
+    strcpy(header->version   , "00");
+    calculate_checksum(header);
+
+    // Write header and file into archive
+    if( tar_write_without_padding("archive.tar", header, content) == -1)
+    {
+        ERROR("Unable to write the tar file without padding");
         free(header);
         return -1;
     }
@@ -1722,7 +1778,6 @@ int fuzz_data_content(char* executable)
     return 0;
 }
 
-
 /**
  * @brief fuzz header no data by:
  * - creating archive with header filled like a file would be stored in it but in fact archive does not contain data
@@ -1777,7 +1832,6 @@ int fuzz_header_no_data(char* executable)
 
     return 0;
 }
-
 
 /**
  * @brief fuzz multiple files by:
@@ -1957,6 +2011,94 @@ int fuzz_multiple_files_without_data(char* executable)
     return 0;
 }
 
+/**
+ * @brief fuzz multiple files with multiple end of marker by:
+ * - creating archive with multiple file entries (header + data) all ending with an end_of_archive marker.
+ * @param executable of the tar extractor
+ * @return -1 if an error occured
+ *          0 if no erroneous archive has been found
+ *          1 if a erroneous archive has been found
+ */
+int fuzz_multiple_files_multiple_end_of_archives(char* executable)
+{
+     printf("===== fuzz multiple files \n");
+
+    int n = 3; // the number of file entries to put inside the archive
+
+    struct tar_t* header;
+    struct tar_t** headers;
+    if( (headers = (struct tar_t**) malloc(n *sizeof(struct tar_t*))) == NULL)
+    {
+        ERROR("Unable to malloc headers");
+        return -1;
+    }
+
+    char* content = "Hello World !";
+    char** contents;
+    if( (contents = (char**) malloc(n *sizeof(char*))) == NULL)
+    {
+        ERROR("Unable to malloc contents");
+        return -1;
+    }
+
+    for(int i = 0; i< n; i++)
+    {
+        // header creation
+        if( (header = (struct tar_t*) calloc(1,sizeof(struct tar_t))) == NULL)
+        {
+            ERROR("Unable to malloc header");
+            return -1;
+        }
+
+        // Fill in the header
+        char name[6];
+        sprintf(name, "file%d", i);
+        strcpy(header->name      , name);
+        strcpy(header->mode      , "07777");
+        sprintf(header->size, "%lo", strlen(content));
+        strcpy(header->magic     , "ustar"); // TMAGIC = ustar
+        strcpy(header->version   , "00");
+        calculate_checksum(header);
+
+        headers[i] = header;
+        contents[i] = content;
+    }
+    
+    // Write headers and contents into archive
+    if( tar_write_multiple_files_multiple_end_of_archives("archive.tar", headers, contents, n) == -1)
+    {
+        ERROR("Unable to write multiple files with end-of-archive marker at every end into the tar file");
+        free(header);
+        free(headers);
+        free(contents);
+        return -1;
+    }
+
+    int rv;
+    if( (rv = launches(executable)) == -1 )
+    {
+        ERROR("Error in launches");
+        free(header);
+        free(headers);
+        free(contents);
+        return -1;
+    }
+    else if (rv == 1)
+    // *** The program has crashed ***
+    {
+        printf("--- AN ERRONEOUS ARCHIVE FOUND \n");
+        free(header);
+        free(headers);
+        free(contents);
+        return 1;
+    }
+   
+    free(header);
+    free(headers);
+    free(contents);
+    return 0;
+}
+
 // ================================================================================
 int main(int argc, char* argv[])
 {
@@ -1966,9 +2108,9 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    int crashed = 0; // count the number of program that crashed
+    int crashed = 0; // count the number of archives that make the extractor crashed
     int rslt;
-/*
+
     // =============== FUZZ name of the file ==================
     if( (rslt = fuzz_name(argv[1])) != -1)
     {
@@ -2032,7 +2174,6 @@ int main(int argc, char* argv[])
         crashed += rslt;
     }
 
-
     // =============== FUZZ version of the file ==================
     // lead to crash
     if( (rslt = fuzz_version(argv[1])) != -1)
@@ -2054,11 +2195,16 @@ int main(int argc, char* argv[])
 
     // =============== FUZZ end of archive ==================
     // lead to crash BUT NOT DETECTED BY INGINIOUS :/ 
-    if( (rslt = fuzz_end_of_archive(argv[1])) != -1)
+    if( (rslt = fuzz_no_end_of_archive(argv[1])) != -1)
     {
         crashed += rslt;
     }
 
+    // =============== FUZZ no padding ================== 
+    if( (rslt = fuzz_no_padding(argv[1])) != -1)
+    {
+        crashed += rslt;
+    }
 
     // =============== FUZZ content of data ==================
     // lead to crash BUT NOT DETECTED BY INGINIOUS :/ 
@@ -2072,7 +2218,7 @@ int main(int argc, char* argv[])
     {
         crashed += rslt;
     }
-*/
+
     // =============== FUZZ multiple files ==================
     if( (rslt = fuzz_multiple_files(argv[1])) != -1)
     {
@@ -2081,6 +2227,12 @@ int main(int argc, char* argv[])
 
     // =============== FUZZ multiple files without data ==================
     if( (rslt = fuzz_multiple_files_without_data(argv[1])) != -1)
+    {
+        crashed += rslt;
+    }
+
+    // =============== FUZZ multiple files with each file ending with end-of-archive marker ==================
+    if( (rslt = fuzz_multiple_files_multiple_end_of_archives(argv[1])) != -1)
     {
         crashed += rslt;
     }

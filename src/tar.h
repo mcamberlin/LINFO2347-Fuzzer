@@ -35,10 +35,13 @@ struct tar_t
 
 int tar_write(const char* tar_name, const struct tar_t* header, const char* file);
 
-int tar_write_multiple_files(const char* tar_name, struct tar_t** headers, char** contents, int n);
-
 int tar_write_without_end_of_archive(const char* tar_name, const struct tar_t* header, const char* content);
+
+int tar_write_without_padding(const char* tar_name, const struct tar_t* header, const char* content);
 
 int tar_write_with_header_without_data(const char* tar_name, const struct tar_t* header, const char* content);
 
+int tar_write_multiple_files(const char* tar_name, struct tar_t** headers, char** contents, int n);
+
+int tar_write_multiple_files_multiple_end_of_archives(const char* tar_name, struct tar_t** headers, char** contents, int n);
 #endif
