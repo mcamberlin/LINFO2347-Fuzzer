@@ -31,7 +31,7 @@ int fuzz_name(char* executable)
     }
 
     // Test every ascii and non ascii character at position 0
-    for( int i = 1; i < 255; i++)
+    for( int i = 1; i < 256; i++)
     {
         char c = (char) i;
         // Fill in the header
@@ -133,7 +133,7 @@ int fuzz_mode(char* executable)
     }
 
     // Test every ascii and non ascii character at position 0
-    for( int i = 0; i < 255; i++)
+    for( int i = 0; i < 256; i++)
     {
         char c = (char) i;
         // Fill in the header
@@ -170,7 +170,7 @@ int fuzz_mode(char* executable)
 
 
     // Test a non ascii character at every position
-    for( int pos = 0; pos < 7; pos++)
+    for( int pos = 0; pos < 8; pos++)
     {
         char c = (char) 128; // first non ascii character chosen
 
@@ -207,11 +207,11 @@ int fuzz_mode(char* executable)
     }
 
     // Test every number at every position
-    for(int pos = 0; pos < 7; pos ++)
+    for(int pos = 0; pos < 8; pos ++)
     {
         for(int i = 0; i< 10; i++)
         {
-            char c = (char) i;
+            char c = (char) i+48;
 
             // Fill in the header
             strcpy(header->name      , "mode");
@@ -277,7 +277,7 @@ int fuzz_uid(char* executable)
     }
 
     // Test all characters from ASCII table and extended ASCII table in the name: https://ascii-tables.com/
-    for(int i =0; i <255; i++)
+    for(int i =0; i <256; i++)
     {
         char c = (char) i;
 
@@ -313,7 +313,7 @@ int fuzz_uid(char* executable)
         }
     }
     // Test a non ascii character at every position
-    for( int pos = 0; pos < 7; pos++)
+    for( int pos = 0; pos < 8; pos++)
     {
         char c = (char) 128; // first non ascii character chosen
 
@@ -351,7 +351,7 @@ int fuzz_uid(char* executable)
     }
 
     // Test every number at every position
-    for(int pos = 0; pos < 7; pos ++)
+    for(int pos = 0; pos < 8; pos ++)
     {
         for(int i = 0; i< 10; i++)
         {
@@ -418,11 +418,11 @@ int fuzz_uid(char* executable)
    }
 
    // Test every number at every position
-   for(int pos = 0; pos < 7; pos ++)
+   for(int pos = 0; pos < 8; pos ++)
    {
        for(int i = 0; i< 8; i++)
        {
-           char c = i+'0';
+           char c = (char) i +48;
 
            // Fill in the header
            strcpy(header->name      , "gid");
@@ -486,7 +486,7 @@ int fuzz_size(char* executable)
     }
 
     // Test all octal value at all position
-    for(int pos = 0; pos < 11; pos++)
+    for(int pos = 0; pos < 12; pos++)
     {
         for(int i = 0; i< 8; i++)
         {
@@ -527,7 +527,7 @@ int fuzz_size(char* executable)
     }
 
     // Test every ascii and non ascii character at position 0
-    for( int i = 0; i < 255; i++)
+    for( int i = 0; i < 256; i++)
     {
         char c = (char) i;
         // Fill in the header
@@ -565,7 +565,7 @@ int fuzz_size(char* executable)
 
 
     // Test a non ascii character at every position
-    for( int pos = 0; pos < 11; pos++)
+    for( int pos = 0; pos < 12; pos++)
     {
         char c = (char) 128; // first non ascii character chosen
 
@@ -631,7 +631,7 @@ int fuzz_mtime(char* executable)
     }
 
     // Test all octal value at all position
-    for(int pos = 0; pos < 11; pos++)
+    for(int pos = 0; pos < 12; pos++)
     {
         for(int i = 0; i< 8; i++)
         {
@@ -672,7 +672,7 @@ int fuzz_mtime(char* executable)
     }
 
     // Test every ascii and non ascii character at position 0
-    for( int i = 0; i < 255; i++)
+    for( int i = 0; i < 256; i++)
     {
         char c = (char) i;
         // Fill in the header
@@ -709,7 +709,7 @@ int fuzz_mtime(char* executable)
     }
 
     // Test a non ascii character at every position
-    for( int pos = 0; pos < 11; pos++)
+    for( int pos = 0; pos < 12; pos++)
     {
         char c = (char) 128; // first non ascii character chosen
 
@@ -777,7 +777,7 @@ int fuzz_chksum(char* executable)
     }
 
     // Test all characters from ASCII table and extended ASCII table in the name: https://ascii-tables.com/
-    for(int i =0; i <255; i++)
+    for(int i =0; i <256; i++)
     {
         char c = (char) i;
 
@@ -813,7 +813,7 @@ int fuzz_chksum(char* executable)
         }
     }
     // Test a non ascii character at every position
-    for( int pos = 0; pos < 7; pos++)
+    for( int pos = 0; pos < 8; pos++)
     {
         char c = (char) 128; // first non ascii character chosen
 
@@ -851,11 +851,11 @@ int fuzz_chksum(char* executable)
     }
 
     // Test every number at every position
-    for(int pos = 0; pos < 7; pos ++)
+    for(int pos = 0; pos < 8; pos ++)
     {
         for(int i = 0; i< 10; i++)
         {
-            char c = (char) i;
+            char c = (char) i+48;
 
             // Fill in the header
             strcpy(header->name      , "checksum");
@@ -1013,46 +1013,6 @@ int fuzz_linkname(char* executable)
             return 1;
         }
     }
-
-
-    // Test a non ascii character at every position
-    for( int pos = 0; pos < 99; pos++)
-    {
-        char c = (char) 128; // first non ascii character chosen
-
-        // Fill in the header
-        strcpy(header->name      , "linkname");
-        strcpy(header->mode     , "07777");
-        char* content = "Hello World !";
-        strcpy(header->size      , "015");
-        header->linkname[pos] = c;
-        strcpy(header->magic     , "ustar"); // TMAGIC = ustar
-        strcpy(header->version   , "00");
-        calculate_checksum(header);
-
-        // Write header and file into archive
-        if( tar_write("archive.tar", header, content) == -1)
-        {
-            ERROR("Unable to write the tar file");
-            free(header);
-            return -1;
-        }
-
-        int rv;
-        if( (rv = launches(executable)) == -1 )
-        {
-            ERROR("Error in launches");
-            free(header);
-            return -1;
-        }
-        else if (rv == 1)
-        // *** The program has crashed ***
-        {
-            printf("--- AN ERRONEOUS ARCHIVE FOUND \n");
-            return 1;
-        }
-    }
-
 
     // Test a non ascii character at every position without content
     for( int pos = 0; pos < 99; pos++)
@@ -1297,13 +1257,13 @@ int fuzz_magic(char* executable)
      // Test every number at every position
      for(int i = 0; i<10; i++)
      {
-       char c = (char) i;
+       char c = (char) i +48;
        strcpy(header->name      , "version");
        strcpy(header->mode     , "07777");
        header->version[0] = c;
 
        for(int j =0; j<10;j++){
-         char d = (char) j;
+         char d = (char) j+48;
          // Fill in the header
          header->version[1] = d;
          char* content = "Hello World !";
@@ -1441,7 +1401,7 @@ int fuzz_uname(char* executable)
     {
         for(int i = 0; i< 9; i++)
         {
-            char c = (char) i;
+            char c = (char) i+48;
 
             // Fill in the header
             strcpy(header->name      , "uname");
